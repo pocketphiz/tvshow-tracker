@@ -48,13 +48,24 @@
       <span class="glyphicon glyphicon-play"></span> Episodes
     </div>
     <div class="panel-body">
-      <div class="episode" ng-repeat="episode in show.episodes">
-        <h4>{{episode.episodeName}}
-        <small>Season {{episode.season}}, Episode {{episode.episodeNumber}}</small>
-        </h4>
+      <div class="episode" ng-repeat="episode in show.episodes | orderBy:['-season', '+episodeNumber']">
+        <h4 ng-if="episode.episodeNumber < 2" class="panel-heading">Season {{episode.season}}</h4>
+        <h5>{{episode.episodeNumber}}. {{episode.episodeName}}
+        <small>S{{episode.season}}E{{episode.episodeNumber}}</small>
+        </h5>
         <p>
           <span class="glyphicon glyphicon-calendar"></span>
           {{episode.firstAired | date: 'short'}}
+          <span ng-repeat="torrent in episode.torrents">
+            <a class="btn" ng-if="torrent.quality == '480p'"
+               data-ng-click="downloadTorrent(torrent, show)" title="Download 480p torrent">
+              <i class="glyphicon glyphicon-sd-video"></i>
+            </a>
+            <a class="btn" ng-if="torrent.quality == '720p'"
+               data-ng-click="downloadTorrent(torrent)" title="Download 720p torrent">
+              <i class="glyphicon glyphicon-hd-video"></i>
+            </a>
+          </span>
         </p>
         <p>{{episode.overview}}</p>
       </div>

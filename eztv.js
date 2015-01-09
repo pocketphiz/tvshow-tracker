@@ -95,12 +95,10 @@ exports.getAllEpisodes = function(data, cb) {
 exports.getShow = function(showName, callback) {
     if(!showName || !callback) return new Error('Missing function parameters');
     var slug =  showName.replace(/[()\-\']/g, '').replace(/\ /g, '-').toLowerCase();
-    console.log('Looking for ' + showName + ' / ' + slug);
     this.getAllShows(function(err, shows) {
         if (err) return callback(err, null);
         shows.forEach(function(show) {
             if (show.slug === slug) {
-                console.log('found ' + show);
                 return callback(null, show);
             }
         });

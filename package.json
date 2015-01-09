@@ -6,7 +6,6 @@
     "async": "^0.8.0",
     "bcryptjs": "^0.7.12",
     "body-parser": "^1.0.0",
-    "connect-redis": "^2.0.0",
     "cookie-parser": "^1.0.1",
     "express": "^4.0.0",
     "express-session": "^1.0.4",
@@ -17,9 +16,10 @@
     "nodemailer": "^0.6.3",
     "passport": "^0.2.0",
     "passport-local": "^1.0.0",
-    "request": "^2.34.0",
-    "sugar": "^1.4.1",
-    "xml2js": "^0.4.2"
+    "request": "^2.51.0",
+    "xml2js": "^0.4.2",
+    "cheerio": "^0.18.0",
+    "transmission": "^0.4.1"
   },
   "devDependencies": {
     "gulp": "^3.6.2",

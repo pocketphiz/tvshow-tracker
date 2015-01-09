@@ -1,3 +1,5 @@
+'use strict';
+
 var path = require('path');
 var express = require('express');
 var cookieParser = require('cookie-parser');
@@ -16,9 +18,20 @@ var request = require('request');
 var xml2js = require('xml2js');
 
 var agenda = require('agenda')({ db: { address: 'localhost:27017/test' } });
-var sugar = require('sugar');
 var nodemailer = require('nodemailer');
 var _ = require('lodash');
+
+var eztv = require('./eztv');
+var Transmission = require('transmission');
+var config = require('./config');
+
+var transmission = new Transmission({
+  port : 443,
+  host : config.transmission.host,
+  username : config.transmission.username,
+  password : config.transmission.password,
+  url : config.transmission.url
+});
 
 var showSchema = new mongoose.Schema({
   _id: Number,
@@ -41,7 +54,11 @@ var showSchema = new mongoose.Schema({
       episodeNumber: Number,
       episodeName: String,
       firstAired: Date,
-      overview: String
+      overview: String,
+      torrents: [{
+        quality: String,
+        magnet: String
+      }]
   }]
 });
 
@@ -119,6 +136,16 @@ app.use(function(req, res, next) {
     res.cookie('user', JSON.stringify(req.user));
   }
   next();
+});
+
+app.post('/api/download', function(req, res, next) {
+  var torrent = req.body;
+  transmission.addUrl(torrent.magnet, {
+    'download-dir' : config.transmission.downloadPath + '/' + torrent.showName
+  }, function(err, result) {
+    if (err) return next(err);
+    res.send(result);
+  });
 });
 
 app.post('/api/login', passport.authenticate('local'), function(req, res) {
@@ -207,11 +234,21 @@ app.post('/api/shows', function(req, res, next) {
             return res.send(404, { message: req.body.showName + ' was not found.' });
           }
           var seriesId = result.data.series.seriesid || result.data.series[0].seriesid;
-          callback(err, seriesId);
+          var seriesName = result.data.series.seriesname || result.data.series[0].seriesname;
+          callback(err, seriesId, seriesName);
         });
       });
     },
-    function(seriesId, callback) {
+    function(seriesId, seriesName, callback) {
+      eztv.getShow(seriesName, function(err, show) {
+        if (err) return next(err);
+        eztv.getAllEpisodes(show, function(err, eztvEpisodes) {
+          if (err) return next(err);
+          callback(err, seriesId, eztvEpisodes);
+        });
+      });
+    },
+    function(seriesId, eztvEpisodes, callback) {
       request.get('http://thetvdb.com/api/' + apiKey + '/series/' + seriesId + '/all/en.xml', function(error, response, body) {
         if (error) return next(error);
         parser.parseString(body, function(err, result) {
@@ -234,12 +271,25 @@ app.post('/api/shows', function(req, res, next) {
             episodes: []
           });
           _.each(episodes, function(episode) {
+            var torrents = [];
+            var eztvSeason = eztvEpisodes[episode.seasonnumber];
+            if (eztvSeason && eztvSeason[episode.episodenumber]) {
+              var magnet480p = eztvSeason[episode.episodenumber]['480p'];
+              var magnet720p = eztvSeason[episode.episodenumber]['720p'];
+              if (magnet480p) {
+                torrents.push({quality: '480p', magnet: magnet480p});
+              }
+              if (magnet720p) {
+                torrents.push({quality: '720p', magnet: magnet720p});
+              }
+            }
             show.episodes.push({
               season: episode.seasonnumber,
               episodeNumber: episode.episodenumber,
               episodeName: episode.episodename,
               firstAired: episode.firstaired,
-              overview: episode.overview
+              overview: episode.overview,
+              torrents: torrents
             });
           });
           callback(err, show);
@@ -262,8 +312,8 @@ app.post('/api/shows', function(req, res, next) {
         }
         return next(err);
       }
-      var alertDate = Date.create('Next ' + show.airsDayOfWeek + ' at ' + show.airsTime).rewind({ hour: 2});
-      agenda.schedule(alertDate, 'send email alert', show.name).repeatEvery('1 week');
+      //var alertDate = Date.create('Next ' + show.airsDayOfWeek + ' at ' + show.airsTime).rewind({ hour: 2});
+      //agenda.schedule(alertDate, 'send email alert', show.name).repeatEvery('1 week');
       res.send(200);
     });
   });
@@ -313,7 +363,7 @@ agenda.define('send email alert', function(job, done) {
   });
 });
 
-agenda.start();
+//agenda.start();
 
 agenda.on('start', function(job) {
   console.log("Job %s starting", job.attrs.name);

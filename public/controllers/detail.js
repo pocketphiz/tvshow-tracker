@@ -1,6 +1,6 @@
 angular.module('MyApp')
-  .controller('DetailCtrl', ['$scope', '$rootScope', '$routeParams', 'Show', 'Subscription',
-    function($scope, $rootScope, $routeParams, Show, Subscription) {
+  .controller('DetailCtrl', ['$scope', '$alert', '$rootScope', '$routeParams', 'Show', 'Subscription', 'Transmission',
+    function($scope, $alert, $rootScope, $routeParams, Show, Subscription, Transmission) {
       Show.get({ _id: $routeParams.id }, function(show) {
         $scope.show = show;
 
@@ -25,4 +25,10 @@ angular.module('MyApp')
           return new Date(episode.firstAired) > new Date();
         })[0];
       });
+      $scope.downloadTorrent = function(torrent, show) {
+        torrent.showName = show.name;
+
+        return Transmission.download(torrent);
+
+      };
     }]);
