@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
   .directive('uniqueEmail', function($http) {
     return {

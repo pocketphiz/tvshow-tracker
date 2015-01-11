@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
   .factory('Auth', function($http, $location, $rootScope, $alert, $window) {
     var token = $window.localStorage.token;
@@ -8,8 +10,7 @@ angular.module('MyApp')
 
     // Asynchronously initialize Facebook SDK
     $window.fbAsyncInit = function() {
-      FB.init({
-        appId: '624059410963642',
+      FB.init({ appId: '624059410963642',
         responseType: 'token',
         version: 'v2.0'
       });
@@ -23,7 +24,7 @@ angular.module('MyApp')
       }
       js = d.createElement(s);
       js.id = id;
-      js.src = "//connect.facebook.net/en_US/sdk.js";
+      js.src = '//connect.facebook.net/en_US/sdk.js';
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 

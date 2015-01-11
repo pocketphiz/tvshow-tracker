@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
   .factory('Subscription', function($http) {
     return {

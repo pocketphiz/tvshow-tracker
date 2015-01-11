@@ -1,5 +1,7 @@
 'use strict';
 
+var config = require('./config');
+
 var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -15,18 +17,15 @@ var async = require('async');
 var request = require('request');
 var xml2js = require('xml2js');
 
-var agenda = require('agenda')({ db: { address: 'localhost:27017/test' } });
+var agenda = require('agenda')({db: {address: config.mongo.address}});
 var nodemailer = require('nodemailer');
 var _ = require('lodash');
 
-var tokenSecret = 'your unique secret';
-
 var eztv = require('./eztv');
 var Transmission = require('transmission');
-var config = require('./config');
 
 var transmission = new Transmission({
-  port : 443,
+  port : config.transmission.port,
   host : config.transmission.host,
   username : config.transmission.username,
   password : config.transmission.password,
@@ -99,7 +98,7 @@ userSchema.methods.comparePassword = function(candidatePassword, cb) {
 var User = mongoose.model('User', userSchema);
 var Show = mongoose.model('Show', showSchema);
 
-mongoose.connect('localhost');
+mongoose.connect('mongodb://' + config.mongo.address);
 
 var app = express();
 
@@ -113,7 +112,7 @@ function ensureAuthenticated(req, res, next) {
   if (req.headers.authorization) {
     var token = req.headers.authorization.split(' ')[1];
     try {
-      var decoded = jwt.decode(token, tokenSecret);
+      var decoded = jwt.decode(token, config.jwt.tokenSecret);
       if (decoded.exp <= Date.now()) {
         res.send(400, 'Access token has expired');
       } else {
@@ -138,17 +137,17 @@ app.post('/api/download', function(req, res, next) {
   });
 });
 
-app.post('/api/login', passport.authenticate('local'), function(req, res) {
+/*app.post('/api/login', passport.authenticate('local'), function(req, res) {
   res.cookie('user', JSON.stringify(req.user));
   res.send(req.user);
-});
+});*/
 function createJwtToken(user) {
   var payload = {
     user: user,
     iat: new Date().getTime(),
     exp: moment().add('days', 7).valueOf()
   };
-  return jwt.encode(payload, tokenSecret);
+  return jwt.encode(payload, config.jwt.tokenSecret);
 }
 
 app.post('/auth/signup', function(req, res, next) {
@@ -291,8 +290,6 @@ app.post('/api/shows', function (req, res, next) {
         });
       });
     },
-    function (seriesId, callback) {
-      request.get('http://thetvdb.com/api/' + apiKey + '/series/' + seriesId + '/all/en.xml', function (error, response, body) {
     function(seriesId, seriesName, callback) {
       eztv.getShow(seriesName, function(err, show) {
         if (err) return next(err);
@@ -361,7 +358,7 @@ app.post('/api/shows', function (req, res, next) {
     if (err) return next(err);
     show.save(function (err) {
       if (err) {
-        if (err.code == 11000) {
+        if (err.code === 11000) {
           return res.send(409, { message: show.name + ' already exists.' });
         }
         return next(err);
@@ -415,9 +412,9 @@ agenda.define('send email alert', function(job, done) {
       if (user.facebook) {
         return user.facebook.email;
       } else if (user.google) {
-        return user.google.email
+        return user.google.email;
       } else {
-        return user.email
+        return user.email;
       }
     });
 
@@ -449,9 +446,9 @@ agenda.define('send email alert', function(job, done) {
 //agenda.start();
 
 agenda.on('start', function(job) {
-  console.log("Job %s starting", job.attrs.name);
+  console.log('Job %s starting', job.attrs.name);
 });
 
 agenda.on('complete', function(job) {
-  console.log("Job %s finished", job.attrs.name);
+  console.log('Job %s finished', job.attrs.name);
 });

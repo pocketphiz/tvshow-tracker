@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
     .factory('Transmission', ['$http', '$location', '$rootScope', '$alert',
       function($http, $location, $rootScope, $alert) {
@@ -23,5 +25,5 @@ angular.module('MyApp')
                           });
                       });
               }
-          }
+          };
       }]);

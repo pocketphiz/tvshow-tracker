@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
   .controller('DetailCtrl', ['$scope', '$alert', '$rootScope', '$routeParams', 'Show', 'Subscription', 'Transmission',
     function($scope, $alert, $rootScope, $routeParams, Show, Subscription, Transmission) {

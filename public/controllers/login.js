@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('MyApp')
   .controller('LoginCtrl', function($scope, Auth) {
     $scope.login = function() {

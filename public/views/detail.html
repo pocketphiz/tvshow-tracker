@@ -59,11 +59,11 @@
           <span ng-repeat="torrent in episode.torrents">
             <a class="btn" ng-if="torrent.quality == '480p'"
                data-ng-click="downloadTorrent(torrent, show)" title="Download 480p torrent">
-              <i class="glyphicon glyphicon-sd-video"></i>
+              <i class="ion-magnet"> 480p</i>
             </a>
             <a class="btn" ng-if="torrent.quality == '720p'"
                data-ng-click="downloadTorrent(torrent)" title="Download 720p torrent">
-              <i class="glyphicon glyphicon-hd-video"></i>
+              <i class="ion-magnet"> 720p</i>
             </a>
           </span>
         </p>

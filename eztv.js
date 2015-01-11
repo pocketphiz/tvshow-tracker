@@ -84,7 +84,7 @@ exports.getAllEpisodes = function(data, cb) {
             if (ep.season && ep.episode) {
                 if(!episodes[ep.season]) episodes[ep.season] = {};
                 if(!episodes[ep.season][ep.episode]) episodes[ep.season][ep.episode] = {};
-                if(!episodes[ep.season][ep.episode][ep.torrent.quality] || title.toLowerCase().indexOf("repack") > -1)
+                if(!episodes[ep.season][ep.episode][ep.torrent.quality] || title.toLowerCase().indexOf('repack') > -1)
                     episodes[ep.season][ep.episode][ep.torrent.quality] = ep.torrent.magnet;
             }
         });

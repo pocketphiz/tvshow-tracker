@@ -1,3 +1,5 @@
+'use strict';
+
 describe('service', function() {
   beforeEach(module('MyApp'));
 
